@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>Maison Valcourt — Espace client</title>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:wght@400;500&family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EEF1F0;--panel:#fff;--ink:#14282B;--mute:#566A6D;--line:#CFD8D7;--brand:#0F3B40;--brand-ink:#fff;--brass:#9C7A3F;--ok:#2E7D5B;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root{--bg:#0D1819;--panel:#142426;--ink:#E6EEEC;--mute:#93A9AA;--line:#27403F;--brand:#C9A867;--brand-ink:#10201F;--brass:#C9A867;--ok:#6CC49B}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.6 Manrope,system-ui,sans-serif}
+h1,h2,h3{font-family:Newsreader,Georgia,serif;font-weight:500;line-height:1.15;margin:0}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+header{padding:20px 0;font:500 22px Newsreader,Georgia,serif}
+.hero{display:grid;gap:36px;padding:28px 0 56px}
+@media(min-width:880px){.hero{grid-template-columns:1.1fr .9fr;align-items:center}}
+h1{font-size:clamp(34px,6vw,56px);max-width:14em}
+.lead{color:var(--mute);max-width:34em;margin:18px 0 0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:22px;border-top:3px solid var(--brass)}
+.card h2{font-size:22px;margin-bottom:4px}
+.small{font-size:13px;color:var(--mute)}
+label{display:block;font-size:13px;font-weight:600;margin:14px 0 4px}
+input,select{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit}
+input:focus-visible,select:focus-visible,button:focus-visible{outline:2px solid var(--brass);outline-offset:2px}
+button{margin-top:16px;width:100%;padding:12px;border:0;border-radius:6px;background:var(--brand);color:var(--brand-ink);font:600 15px Manrope,sans-serif;cursor:pointer}
+button.ghost{background:transparent;color:var(--mute);border:1px solid var(--line);margin-top:8px}
+button.mini{width:auto;margin:0;padding:6px 12px;font-size:13px}
+.hidden{display:none}
+.err{color:#B3402F;font-size:13px;min-height:20px;margin-top:8px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);font-size:14px}
+.row:last-child{border:0}
+#qr{width:200px;height:200px;background:#fff;border-radius:6px;display:block;margin:12px 0}
+code{word-break:break-all;font-size:13px}
+.panel{margin-top:24px;padding-top:6px;border-top:1px solid var(--line)}
+.panel h3{font-size:18px;margin:14px 0 4px}
+body.in .hero,body.in .sec{display:none}
+.sec{padding:48px 0;border-top:1px solid var(--line)}
+.sec h2{font-size:clamp(26px,4vw,34px);margin-bottom:22px}
+.grid{display:grid;gap:14px}
+@media(min-width:760px){.grid{grid-template-columns:repeat(3,1fr)}}
+.grid .card{border-top:1px solid var(--line)}
+.grid h3{font-size:19px;margin-bottom:6px}
+.grid p{margin:0;color:var(--mute);font-size:15px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>Maison Valcourt</header>
+
+<section class="hero" id="hero">
+<div>
+<h1>Vos dossiers, accessibles à vous seul.</h1>
+<p class="lead">Cabinet d'avocats d'affaires. Chaque client dispose d'un espace privé pour consulter ses documents et échanger avec son avocat.</p>
+</div>
+
+<div class="card">
+<div id="v-login">
+<h2>Espace client</h2>
+<label for="em">Adresse e-mail</label>
+<input id="em" type="email" autocomplete="username">
+<label for="pw">Mot de passe</label>
+<input id="pw" type="password" autocomplete="current-password">
+<div class="err" id="e1" role="alert"></div>
+<button id="b-login">Se connecter</button>
+</div>
+
+<div id="v-enroll" class="hidden">
+<h2>Activer la double authentification</h2>
+<p class="small">Scannez ce code avec une application d'authentification, puis saisissez le code à 6 chiffres affiché. Sur téléphone, saisissez plutôt la clé ci-dessous dans l'application.</p>
+<img id="qr" alt="Code QR de double authentification">
+<p class="small">Clé : <code id="secret"></code></p>
+<label for="c1">Code à 6 chiffres</label>
+<input id="c1" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
+<div class="err" id="e2" role="alert"></div>
+<button id="b-enroll">Activer et continuer</button>
+</div>
+
+<div id="v-verify" class="hidden">
+<h2>Vérification en deux étapes</h2>
+<p class="small">Saisissez le code à 6 chiffres de votre application d'authentification.</p>
+<label for="c2">Code de vérification</label>
+<input id="c2" inputmode="numeric" maxlength="6" autocomplete="one-time-code">
+<div class="err" id="e3" role="alert"></div>
+<button id="b-verify">Valider le code</button>
+<button class="ghost" id="b-cancel">Annuler</button>
+</div>
+</div>
+</section>
+
+<section id="v-app" class="hidden card" style="margin:28px 0 48px">
+<h2 id="hello">Bonjour</h2>
+<p class="small" id="who"></p>
+<div class="err" id="msg" role="alert"></div>
+
+<h3 style="margin-top:14px">Documents</h3>
+<div id="docs"></div>
+
+<div class="panel hidden" id="upload">
+<h3>Déposer un document</h3>
+<label for="client">Client</label>
+<select id="client"></select>
+<label for="file">Fichier (20 Mo maximum)</label>
+<input id="file" type="file">
+<div class="err" id="upmsg" role="alert"></div>
+<button id="b-up">Déposer</button>
+</div>
+
+<div class="panel">
+<h3>Journal d'activité</h3>
+<div id="log"></div>
+</div>
+<button class="ghost" id="b-out">Se déconnecter</button>
+</section>
+
+<section class="sec" id="securite">
+<h2>Une sécurité pensée pour le secret professionnel</h2>
+<div class="grid">
+<div class="card"><h3>Accès contrôlé</h3><p>Double authentification obligatoire : chaque client ne voit que son dossier.</p></div>
+<div class="card"><h3>Documents privés</h3><p>Les fichiers sont stockés dans un espace privé, accessibles par lien temporaire.</p></div>
+<div class="card"><h3>Traçabilité</h3><p>Chaque dépôt et chaque consultation est enregistré et daté.</p></div>
+</div>
+</section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script>
+const sb = supabase.createClient(
+  'https://gqolifxwmtlxocgaotro.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdxb2xpZnh3bXRseG9jZ2FvdHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2NDUwNzksImV4cCI6MjEwNzIyMTA3OX0.8l-LVd6tDiHH5W4gTjQW7555MY0nQt3jqa8NAnDRskg'
+);
+const $ = (id) => document.getElementById(id);
+const say = (id, t) => ($(id).textContent = t || '');
+const fmt = (d) => new Date(d).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });
+const h = (t, a = {}, ...c) => {
+  const e = document.createElement(t);
+  for (const k in a) k.startsWith('on') ? (e[k] = a[k]) : e.setAttribute(k, a[k]);
+  c.flat().forEach((x) => e.append(x));
+  return e;
+};
+const VIEWS = ['login', 'enroll', 'verify', 'app'];
+function go(v) {
+  VIEWS.forEach((x) => $('v-' + x).classList.toggle('hidden', x !== v));
+  $('hero').classList.toggle('hidden', v === 'app');
+  document.body.classList.toggle('in', v === 'app');
+}
+
+let factorId = null;
+
+async function route() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) return go('login');
+  const { data: a } = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (a.currentLevel === 'aal2') return loadApp(session.user);
+  if (a.nextLevel === 'aal2') {
+    const { data } = await sb.auth.mfa.listFactors();
+    factorId = data.totp[0].id;
+    say('e3'); $('c2').value = '';
+    return go('verify');
+  }
+  const { data: all } = await sb.auth.mfa.listFactors();
+  for (const f of all.all.filter((f) => f.status === 'unverified')) await sb.auth.mfa.unenroll({ factorId: f.id });
+  const { data, error } = await sb.auth.mfa.enroll({ factorType: 'totp' });
+  if (error) { say('e2', 'Activation impossible. Réessayez.'); return go('enroll'); }
+  factorId = data.id;
+  $('qr').src = data.totp.qr_code;
+  $('secret').textContent = data.totp.secret;
+  say('e2'); $('c1').value = '';
+  go('enroll');
+}
+
+async function check(code, errId) {
+  if (!/^\d{6}$/.test(code)) return say(errId, 'Saisissez les 6 chiffres du code.');
+  const { error } = await sb.auth.mfa.challengeAndVerify({ factorId, code });
+  if (error) return say(errId, 'Code incorrect. Vérifiez les 6 chiffres et réessayez.');
+  route();
+}
+
+$('b-login').onclick = async () => {
+  say('e1');
+  const { error } = await sb.auth.signInWithPassword({ email: $('em').value.trim(), password: $('pw').value });
+  if (error) return say('e1', 'Identifiants incorrects.');
+  $('pw').value = '';
+  route();
+};
+$('b-enroll').onclick = () => check($('c1').value.trim(), 'e2');
+$('b-verify').onclick = () => check($('c2').value.trim(), 'e3');
+$('b-cancel').onclick = () => sb.auth.signOut().then(route);
+$('b-out').onclick = () => sb.auth.signOut().then(route);
+
+let me = null, people = {};
+async function loadApp(user) {
+  go('app');
+  const { data: p } = await sb.from('profiles').select('email,role').eq('id', user.id).single();
+  me = { id: user.id, ...p };
+  $('hello').textContent = me.role === 'avocat' ? 'Espace du cabinet' : 'Bonjour';
+  $('who').textContent = me.email;
+  $('upload').classList.toggle('hidden', me.role !== 'avocat');
+  if (me.role === 'avocat') {
+    const { data } = await sb.from('profiles').select('id,email,role');
+    people = Object.fromEntries(data.map((x) => [x.id, x.email]));
+    const sel = $('client'); sel.replaceChildren(h('option', { value: '' }, 'Choisir un client'));
+    data.filter((x) => x.role === 'client').forEach((x) => sel.append(h('option', { value: x.id }, x.email)));
+  }
+  loadDocs(); loadLog();
+}
+
+async function loadDocs() {
+  const { data, error } = await sb.from('documents').select('id,name,path,created_at,owner_id').order('created_at', { ascending: false });
+  const box = $('docs'); box.replaceChildren();
+  if (error) return say('msg', 'Impossible de charger les documents.');
+  if (!data.length) return box.append(h('p', { class: 'small' }, 'Aucun document pour le moment.'));
+  data.forEach((d) => box.append(h('div', { class: 'row' },
+    h('span', {}, h('b', {}, d.name), h('br'),
+      h('span', { class: 'small' }, fmt(d.created_at) + (me.role === 'avocat' ? ' · ' + (people[d.owner_id] || '') : ''))),
+    h('button', { class: 'mini', onclick: () => openDoc(d) }, 'Ouvrir'))));
+}
+
+async function openDoc(d) {
+  say('msg');
+  const r = await sb.rpc('log_access', { p_doc: d.id });
+  if (r.error) return say('msg', 'Accès refusé.');
+  const { data, error } = await sb.storage.from('documents').createSignedUrl(d.path, 60, { download: d.name });
+  if (error) return say('msg', 'Document indisponible.');
+  location.href = data.signedUrl;
+}
+
+async function loadLog() {
+  const { data } = await sb.from('audit_log').select('action,detail,created_at').order('created_at', { ascending: false }).limit(15);
+  const box = $('log'); box.replaceChildren();
+  (data || []).forEach((l) => box.append(h('div', { class: 'row' },
+    h('span', {}, l.action === 'depot' ? 'Dépôt' : 'Consultation', ' : ', l.detail || ''),
+    h('span', { class: 'small' }, fmt(l.created_at)))));
+}
+
+$('b-up').onclick = async () => {
+  say('upmsg');
+  const f = $('file').files[0], owner = $('client').value;
+  if (!f || !owner) return say('upmsg', 'Choisissez un client et un fichier.');
+  if (f.size > 20 * 1024 * 1024) return say('upmsg', 'Fichier trop lourd (20 Mo maximum).');
+  const safe = f.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^\w.\-]+/g, '_').slice(-100);
+  const path = owner + '/' + crypto.randomUUID() + '-' + safe;
+  const up = await sb.storage.from('documents').upload(path, f, { contentType: f.type || 'application/octet-stream' });
+  if (up.error) return say('upmsg', 'Dépôt impossible.');
+  const ins = await sb.from('documents').insert({ owner_id: owner, name: f.name.slice(0, 120), path });
+  if (ins.error) { await sb.storage.from('documents').remove([path]); return say('upmsg', 'Dépôt impossible.'); }
+  say('upmsg', 'Document déposé.');
+  $('file').value = '';
+  loadDocs(); loadLog();
+};
+
+// Déconnexion automatique après 15 minutes d'inactivité
+let idle;
+const arm = () => { clearTimeout(idle); idle = setTimeout(() => sb.auth.signOut().then(route), 15 * 60 * 1000); };
+['click', 'keydown', 'touchstart'].forEach((e) => addEventListener(e, arm, { passive: true }));
+sb.auth.onAuthStateChange((e) => { if (e === 'SIGNED_OUT') go('login'); });
+route();
+</script>
+</body>
+</html>
