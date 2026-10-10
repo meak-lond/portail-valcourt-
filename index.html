@@ -55,6 +55,9 @@ body.in .hero,body.in .sec{display:none}
 #contact button:disabled{opacity:.6}
 .cmsg{min-height:22px;font-size:14px;margin-top:10px!important}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+#contact textarea{width:100%;min-height:130px;resize:vertical;background:transparent;border:2px solid #C4897A;border-radius:0;color:#fff;padding:16px;font:inherit;font-size:17px;margin-top:12px}
+#contact textarea::placeholder{color:#A9A9A9}
+#contact textarea:focus-visible{outline:2px solid #fff}
 #top{position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));width:48px;height:48px;margin:0;padding:0;border-radius:0;background:#C4897A;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center}
 #top:focus-visible{outline:2px solid #fff;outline-offset:2px}
 </style>
@@ -78,6 +81,28 @@ body.in .hero,body.in .sec{display:none}
 <input id="pw" type="password" autocomplete="current-password">
 <div class="err" id="e1" role="alert"></div>
 <button id="b-login">Se connecter</button>
+<button class="ghost" id="l-forgot" type="button">Mot de passe oublié ?</button>
+</div>
+
+<div id="v-forgot" class="hidden">
+<h2>Mot de passe oublié</h2>
+<p class="small">Saisissez votre adresse e-mail : vous recevrez un lien pour choisir un nouveau mot de passe. Votre code à 6 chiffres vous sera ensuite demandé.</p>
+<label for="fem">Adresse e-mail</label>
+<input id="fem" type="email" autocomplete="username">
+<p class="small" id="e4" role="status" style="min-height:20px;margin-top:8px"></p>
+<button id="b-forgot">Envoyer le lien</button>
+<button class="ghost" id="b-back">Retour</button>
+</div>
+
+<div id="v-newpw" class="hidden">
+<h2>Nouveau mot de passe</h2>
+<p class="small">12 caractères minimum. Choisissez une phrase que vous n'utilisez nulle part ailleurs.</p>
+<label for="np1">Nouveau mot de passe</label>
+<input id="np1" type="password" autocomplete="new-password">
+<label for="np2">Confirmer le mot de passe</label>
+<input id="np2" type="password" autocomplete="new-password">
+<div class="err" id="e5" role="alert"></div>
+<button id="b-newpw">Enregistrer</button>
 </div>
 
 <div id="v-enroll" class="hidden">
@@ -130,6 +155,15 @@ body.in .hero,body.in .sec{display:none}
 <h3>Journal d'activité</h3>
 <div id="log"></div>
 </div>
+<div class="panel">
+<h3>Changer mon mot de passe</h3>
+<label for="ap1">Nouveau mot de passe (12 caractères minimum)</label>
+<input id="ap1" type="password" autocomplete="new-password">
+<label for="ap2">Confirmer le mot de passe</label>
+<input id="ap2" type="password" autocomplete="new-password">
+<div class="err" id="e6" role="alert"></div>
+<button id="b-chg">Changer le mot de passe</button>
+</div>
 <button class="ghost" id="b-out">Se déconnecter</button>
 </section>
 
@@ -156,6 +190,7 @@ body.in .hero,body.in .sec{display:none}
 <p>Radio Jam, Rue du Château d'Eau, Yamoussoukro</p>
 <p><a href="tel:+2252730640179">27 30 64 01 79</a></p>
 <input id="cem" type="email" placeholder="Votre adresse e-mail" aria-label="Votre adresse e-mail" autocomplete="email">
+<textarea id="ctxt" maxlength="2000" placeholder="Votre message" aria-label="Votre message"></textarea>
 <input class="hp" id="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
 <button id="b-contact">Envoyer un mail</button>
 <p class="cmsg" id="cmsg" role="status"></p>
@@ -179,7 +214,7 @@ const h = (t, a = {}, ...c) => {
   c.flat().forEach((x) => e.append(x));
   return e;
 };
-const VIEWS = ['login', 'enroll', 'verify', 'app'];
+const VIEWS = ['login', 'forgot', 'newpw', 'enroll', 'verify', 'app'];
 function go(v) {
   VIEWS.forEach((x) => $('v-' + x).classList.toggle('hidden', x !== v));
   $('hero').classList.toggle('hidden', v === 'app');
@@ -187,18 +222,20 @@ function go(v) {
 }
 
 let factorId = null;
+let recovery = /type=recovery/.test(location.hash);
 
 async function route() {
   const { data: { session } } = await sb.auth.getSession();
   if (!session) return go('login');
   const { data: a } = await sb.auth.mfa.getAuthenticatorAssuranceLevel();
-  if (a.currentLevel === 'aal2') return loadApp(session.user);
+  if (a.currentLevel === 'aal2') return recovery ? (say('e5'), go('newpw')) : loadApp(session.user);
   if (a.nextLevel === 'aal2') {
     const { data } = await sb.auth.mfa.listFactors();
     factorId = data.totp[0].id;
     say('e3'); $('c2').value = '';
     return go('verify');
   }
+  if (recovery) { say('e5'); return go('newpw'); }
   const { data: all } = await sb.auth.mfa.listFactors();
   for (const f of all.all.filter((f) => f.status === 'unverified')) await sb.auth.mfa.unenroll({ factorId: f.id });
   const { data, error } = await sb.auth.mfa.enroll({ factorType: 'totp' });
@@ -249,11 +286,13 @@ async function loadApp(user) {
 }
 
 async function loadContacts() {
-  const { data } = await sb.from('contact_messages').select('email,created_at').order('created_at', { ascending: false }).limit(20);
+  const { data } = await sb.from('contact_messages').select('email,message,created_at').order('created_at', { ascending: false }).limit(20);
   const box = $('clist'); box.replaceChildren();
   if (!data || !data.length) return box.append(h('p', { class: 'small' }, 'Aucune demande pour le moment.'));
   data.forEach((c) => box.append(h('div', { class: 'row' },
-    h('a', { href: 'mailto:' + c.email }, c.email), h('span', { class: 'small' }, fmt(c.created_at)))));
+    h('span', { style: 'white-space:pre-wrap;word-break:break-word' },
+      h('a', { href: 'mailto:' + c.email }, c.email), h('br'), c.message || ''),
+    h('span', { class: 'small' }, fmt(c.created_at)))));
 }
 
 async function loadDocs() {
@@ -305,21 +344,58 @@ $('b-contact').onclick = async () => {
   say('cmsg');
   if ($('hp').value) return say('cmsg', 'Merci, le cabinet vous répondra à cette adresse.');
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em) || em.length > 200) return say('cmsg', 'Saisissez une adresse e-mail valide.');
+  const msg = $('ctxt').value.trim();
+  if (msg.length < 5) return say('cmsg', 'Écrivez votre message (5 caractères minimum).');
   const b = $('b-contact'); b.disabled = true;
   setTimeout(() => (b.disabled = false), 10000);
-  const { error } = await sb.from('contact_messages').insert({ email: em });
+  const { error } = await sb.from('contact_messages').insert({ email: em, message: msg });
   if (error) return say('cmsg', 'Envoi impossible. Appelez le cabinet au 27 30 64 01 79.');
-  $('cem').value = '';
+  $('cem').value = ''; $('ctxt').value = '';
   say('cmsg', 'Merci, le cabinet vous répondra à cette adresse.');
 };
 $('top').onclick = () => scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
 addEventListener('scroll', () => $('top').classList.toggle('hidden', scrollY < 400 || document.body.classList.contains('in')), { passive: true });
 
+$('l-forgot').onclick = () => { say('e4'); go('forgot'); };
+$('b-back').onclick = () => go('login');
+$('b-forgot').onclick = async () => {
+  const em = $('fem').value.trim();
+  if (!em) return say('e4', 'Saisissez votre adresse e-mail.');
+  const b = $('b-forgot'); b.disabled = true;
+  setTimeout(() => (b.disabled = false), 60000);
+  await sb.auth.resetPasswordForEmail(em, { redirectTo: location.origin + location.pathname });
+  say('e4', "Si cette adresse correspond à un compte, un e-mail vient d'être envoyé.");
+};
+
+async function setPassword(p1, p2, errId) {
+  if (p1.length < 12) { say(errId, '12 caractères minimum.'); return false; }
+  if (p1 !== p2) { say(errId, 'Les deux mots de passe sont différents.'); return false; }
+  const { error } = await sb.auth.updateUser({ password: p1 });
+  if (error) { say(errId, 'Changement impossible. Reconnectez-vous ou refaites la demande.'); return false; }
+  return true;
+}
+$('b-newpw').onclick = async () => {
+  if (!(await setPassword($('np1').value, $('np2').value, 'e5'))) return;
+  $('np1').value = ''; $('np2').value = '';
+  recovery = false;
+  history.replaceState(null, '', location.pathname);
+  route();
+};
+$('b-chg').onclick = async () => {
+  say('e6');
+  if (!(await setPassword($('ap1').value, $('ap2').value, 'e6'))) return;
+  $('ap1').value = ''; $('ap2').value = '';
+  say('e6', 'Mot de passe modifié.');
+};
+
 // Déconnexion automatique après 15 minutes d'inactivité
 let idle;
 const arm = () => { clearTimeout(idle); idle = setTimeout(() => sb.auth.signOut().then(route), 15 * 60 * 1000); };
 ['click', 'keydown', 'touchstart'].forEach((e) => addEventListener(e, arm, { passive: true }));
-sb.auth.onAuthStateChange((e) => { if (e === 'SIGNED_OUT') go('login'); });
+sb.auth.onAuthStateChange((e) => {
+  if (e === 'SIGNED_OUT') { recovery = false; go('login'); }
+  if (e === 'PASSWORD_RECOVERY') { recovery = true; setTimeout(route, 0); }
+});
 route();
 </script>
 </body>
