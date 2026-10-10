@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<title>Cabinet assermenté — Agent d'affaires judiciaires </title>
+<title>Cabinet Assermenté — Agent d'affaires judiciaires à Yamoussoukro</title>
 <link href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;500&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{--bg:#F3F1F0;--panel:#fff;--ink:#231A1D;--mute:#6A5F63;--line:#DDD5D6;--brand:#6B1D2E;--brand-ink:#fff;--brass:#44505C;--ok:#2E7D5B;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -44,11 +44,24 @@ body.in .hero,body.in .sec{display:none}
 .grid .card{border-top:1px solid var(--line)}
 .grid h3{font-size:19px;margin-bottom:6px}
 .grid p{margin:0;color:var(--mute);font-size:15px}
+#contact{background:#363636;color:#fff;border-radius:10px;padding:32px 24px;margin:0 0 48px;border-top:0}
+#contact h2{color:#fff;margin-bottom:14px}
+#contact p{margin:0 0 6px}
+#contact a{color:#fff}
+#contact input{background:transparent;border:2px solid #C4897A;border-radius:0;color:#fff;padding:18px 16px;font-size:17px;margin-top:22px}
+#contact input::placeholder{color:#A9A9A9}
+#contact input:focus-visible,#contact button:focus-visible{outline:2px solid #fff}
+#contact button{background:#C4897A;color:#fff;border-radius:0;padding:18px;font-size:18px;font-weight:400;margin-top:12px}
+#contact button:disabled{opacity:.6}
+.cmsg{min-height:22px;font-size:14px;margin-top:10px!important}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+#top{position:fixed;right:20px;bottom:calc(20px + env(safe-area-inset-bottom,0px));width:48px;height:48px;margin:0;padding:0;border-radius:0;background:#C4897A;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center}
+#top:focus-visible{outline:2px solid #fff;outline-offset:2px}
 </style>
 </head>
 <body>
 <div class="wrap">
-<header>Cabinet assermenté<span class="role">Agent d'affaires judiciaires </span></header>
+<header>Cabinet Assermenté<span class="role">Agent d'affaires judiciaires assermenté</span></header>
 
 <section class="hero" id="hero">
 <div>
@@ -108,6 +121,11 @@ body.in .hero,body.in .sec{display:none}
 <button id="b-up">Déposer</button>
 </div>
 
+<div class="panel hidden" id="contacts">
+<h3>Demandes de contact</h3>
+<div id="clist"></div>
+</div>
+
 <div class="panel">
 <h3>Journal d'activité</h3>
 <div id="log"></div>
@@ -132,7 +150,19 @@ body.in .hero,body.in .sec{display:none}
 <div class="card"><h3>Traçabilité</h3><p>Chaque dépôt et chaque consultation est enregistré et daté.</p></div>
 </div>
 </section>
+
+<section class="sec" id="contact">
+<h2>Nous contacter</h2>
+<p>Radio Jam, Rue du Château d'Eau, Yamoussoukro</p>
+<p><a href="tel:+2252730640179">27 30 64 01 79</a></p>
+<input id="cem" type="email" placeholder="Votre adresse e-mail" aria-label="Votre adresse e-mail" autocomplete="email">
+<input class="hp" id="hp" tabindex="-1" autocomplete="off" aria-hidden="true">
+<button id="b-contact">Envoyer un mail</button>
+<p class="cmsg" id="cmsg" role="status"></p>
+</section>
 </div>
+
+<button id="top" class="hidden" aria-label="Revenir en haut de la page"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 15l7-7 7 7"/></svg></button>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
@@ -207,6 +237,7 @@ async function loadApp(user) {
   $('hello').textContent = me.role === 'avocat' ? 'Espace du cabinet' : 'Bonjour';
   $('who').textContent = me.email;
   $('upload').classList.toggle('hidden', me.role !== 'avocat');
+  $('contacts').classList.toggle('hidden', me.role !== 'avocat');
   if (me.role === 'avocat') {
     const { data } = await sb.from('profiles').select('id,email,role');
     people = Object.fromEntries(data.map((x) => [x.id, x.email]));
@@ -214,6 +245,15 @@ async function loadApp(user) {
     data.filter((x) => x.role === 'client').forEach((x) => sel.append(h('option', { value: x.id }, x.email)));
   }
   loadDocs(); loadLog();
+  if (me.role === 'avocat') loadContacts();
+}
+
+async function loadContacts() {
+  const { data } = await sb.from('contact_messages').select('email,created_at').order('created_at', { ascending: false }).limit(20);
+  const box = $('clist'); box.replaceChildren();
+  if (!data || !data.length) return box.append(h('p', { class: 'small' }, 'Aucune demande pour le moment.'));
+  data.forEach((c) => box.append(h('div', { class: 'row' },
+    h('a', { href: 'mailto:' + c.email }, c.email), h('span', { class: 'small' }, fmt(c.created_at)))));
 }
 
 async function loadDocs() {
@@ -259,6 +299,21 @@ $('b-up').onclick = async () => {
   $('file').value = '';
   loadDocs(); loadLog();
 };
+
+$('b-contact').onclick = async () => {
+  const em = $('cem').value.trim();
+  say('cmsg');
+  if ($('hp').value) return say('cmsg', 'Merci, le cabinet vous répondra à cette adresse.');
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em) || em.length > 200) return say('cmsg', 'Saisissez une adresse e-mail valide.');
+  const b = $('b-contact'); b.disabled = true;
+  setTimeout(() => (b.disabled = false), 10000);
+  const { error } = await sb.from('contact_messages').insert({ email: em });
+  if (error) return say('cmsg', 'Envoi impossible. Appelez le cabinet au 27 30 64 01 79.');
+  $('cem').value = '';
+  say('cmsg', 'Merci, le cabinet vous répondra à cette adresse.');
+};
+$('top').onclick = () => scrollTo({ top: 0, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+addEventListener('scroll', () => $('top').classList.toggle('hidden', scrollY < 400 || document.body.classList.contains('in')), { passive: true });
 
 // Déconnexion automatique après 15 minutes d'inactivité
 let idle;
