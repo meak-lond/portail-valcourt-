@@ -303,7 +303,9 @@ async function loadDocs() {
   data.forEach((d) => box.append(h('div', { class: 'row' },
     h('span', {}, h('b', {}, d.name), h('br'),
       h('span', { class: 'small' }, fmt(d.created_at) + (me.role === 'avocat' ? ' · ' + (people[d.owner_id] || '') : ''))),
-    h('button', { class: 'mini', onclick: () => openDoc(d) }, 'Ouvrir'))));
+    h('span', { style: 'display:flex;gap:8px' },
+      h('button', { class: 'mini', onclick: () => openDoc(d) }, 'Ouvrir'),
+      me.role === 'avocat' ? h('button', { class: 'mini ghost', onclick: () => delDoc(d) }, 'Supprimer') : ''))));
 }
 
 async function openDoc(d) {
@@ -313,6 +315,16 @@ async function openDoc(d) {
   const { data, error } = await sb.storage.from('documents').createSignedUrl(d.path, 60, { download: d.name });
   if (error) return say('msg', 'Document indisponible.');
   location.href = data.signedUrl;
+}
+
+async function delDoc(d) {
+  if (!confirm('Supprimer définitivement « ' + d.name + ' » ?')) return;
+  say('msg');
+  const del = await sb.from('documents').delete().eq('id', d.id);
+  if (del.error) return say('msg', 'Suppression impossible.');
+  const rm = await sb.storage.from('documents').remove([d.path]);
+  if (rm.error) say('msg', 'Document retiré de la liste, mais le fichier reste à supprimer dans Supabase.');
+  loadDocs();
 }
 
 async function loadLog() {
