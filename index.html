@@ -32,6 +32,9 @@ button.mini{width:auto;margin:0;padding:6px 12px;font-size:13px}
 .err{color:#B3402F;font-size:13px;min-height:20px;margin-top:8px}
 .row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);font-size:14px}
 .row:last-child{border:0}
+.row{flex-wrap:wrap}
+.row>span:first-child{flex:1 1 180px;min-width:0;overflow-wrap:anywhere}
+.row>span:last-child{flex:0 0 auto}
 #qr{width:200px;height:200px;background:#fff;border-radius:6px;display:block;margin:12px 0}
 code{word-break:break-all;font-size:13px}
 .panel{margin-top:24px;padding-top:6px;border-top:1px solid var(--line)}
@@ -206,7 +209,7 @@ const sb = supabase.createClient(
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdxb2xpZnh3bXRseG9jZ2FvdHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE2NDUwNzksImV4cCI6MjEwNzIyMTA3OX0.8l-LVd6tDiHH5W4gTjQW7555MY0nQt3jqa8NAnDRskg'
 );
 const $ = (id) => document.getElementById(id);
-const say = (id, t) => ($(id).textContent = t || '');
+const say = (id, t, good) => { $(id).textContent = t || ''; $(id).style.color = good ? 'var(--ok)' : ''; };
 const fmt = (d) => new Date(d).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });
 const h = (t, a = {}, ...c) => {
   const e = document.createElement(t);
@@ -346,7 +349,7 @@ $('b-up').onclick = async () => {
   if (up.error) return say('upmsg', 'Dépôt impossible.');
   const ins = await sb.from('documents').insert({ owner_id: owner, name: f.name.slice(0, 120), path });
   if (ins.error) { await sb.storage.from('documents').remove([path]); return say('upmsg', 'Dépôt impossible.'); }
-  say('upmsg', 'Document déposé.');
+  say('upmsg', 'Document déposé.', true);
   $('file').value = '';
   loadDocs(); loadLog();
 };
@@ -397,7 +400,7 @@ $('b-chg').onclick = async () => {
   say('e6');
   if (!(await setPassword($('ap1').value, $('ap2').value, 'e6'))) return;
   $('ap1').value = ''; $('ap2').value = '';
-  say('e6', 'Mot de passe modifié.');
+  say('e6', 'Mot de passe modifié.', true);
 };
 
 // Déconnexion automatique après 15 minutes d'inactivité
